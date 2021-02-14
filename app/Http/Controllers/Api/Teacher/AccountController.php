@@ -3,34 +3,46 @@
 namespace App\Http\Controllers\Api\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\UpdateRequest;
 use Illuminate\Http\Request;
-use App\Authenticator;
-use App\Teacher;
-
+use App\Models\Teacher;
+use Auth;
 
 class AccountController extends Controller
 {
-    private $authenticator;
-
-    public function __construct(Authenticator $authenticator)
+    public function register(RegisterRequest $request)
     {
-        $this->authenticator = $authenticator;
+        $user = Teacher::create([
+            'first_name' => $request->firstname,
+            'last_name' => $request->lastname,
+            'gender' => $request->gender,
+            'month' => $request->month,
+            'day' => $request->day,
+            'year' => $request->year,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+        ]);
+
+        $token = $user->createToken('teachers')->accessToken;
+
+        return response()->json([
+            'access_token' => $token,
+            'user' => $user
+        ], 200);
     }
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
+    public function logout()
+    {
+        Auth::guard('teacher')->user()->token()->revoke();
+        return response()->json('Logout');
+    }
+
     public function index()
     {
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create()
     {
         //
@@ -76,9 +88,18 @@ class AccountController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdateRequest $request, $id)
     {
-        dd(request()->all());
+        $user = Teacher::where('id', $id)->first();
+
+        $user->first_name = $request->first_name;
+        $user->last_name = $request->last_name;
+        $user->gender = $request->gender;
+        $user->month = $request->month;
+        $user->day = $request->day;
+        $user->year = $request->year;
+        $user->save();
+        return response()->json($user, 200);
     }
 
     /**
@@ -90,40 +111,5 @@ class AccountController extends Controller
     public function destroy($id)
     {
         //
-    }
-
-    public function register(Request $request)
-    {
-        $this->validate($request, [
-            'name' => 'required|min:3',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6',
-        ]);
-
-        $user = Teacher::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password)
-        ]);
-
-        $token = $user->createToken('teacher')->accessToken;
-
-        return response()->json(['token' => $token], 200);
-    }
-
-    public function login(Request $request)
-    {
-        $credentials = array_values($request->only('email', 'password', 'provider'));
-
-        if (! $user = $this->authenticator->attempt(...$credentials)) {
-            throw new AuthenticationException();
-        }
-
-        $token = $user->createToken($request->provider)->accessToken;
-
-        return [
-            'access_token' => $token,
-            'user' => $user
-        ];
     }
 }

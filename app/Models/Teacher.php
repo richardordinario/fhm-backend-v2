@@ -1,11 +1,11 @@
 <?php
 
-namespace App;
-
+namespace App\Models;
 use App\Notifications\TeacherResetPassword;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Passport\HasApiTokens;
+
 class Teacher extends Authenticatable
 {
     use Notifiable, HasApiTokens;
@@ -16,7 +16,14 @@ class Teacher extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'first_name',
+        'last_name',
+        'gender',
+        'month',
+        'day',
+        'year',
+        'email',
+        'password',
     ];
 
     /**
@@ -37,5 +44,15 @@ class Teacher extends Authenticatable
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new TeacherResetPassword($token));
+    }
+
+    public function image()
+    {
+        return $this->morphOne(Image::class, 'imageable');
+    }
+
+    public function subjects()
+    {
+        return $this->hasMany(Subject::class);
     }
 }
