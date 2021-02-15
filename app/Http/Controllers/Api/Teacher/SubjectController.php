@@ -17,13 +17,49 @@ class SubjectController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function need() { return 'teacher'; }
+    public static function need() { return 'teacher'; }
 
     public function index()
     {
-        
-        $subjects = Teacher::find(Helper::auth(self::need())->id)->subjects;
-        return $subjects;
+        $need = 'all';
+        return response()->json(self::pagination($need), 200);
+    }
+
+    public function pending() {
+        $need = 'pending';
+        return response()->json(self::pagination($need), 200);
+    }
+    public function recent() {
+        $need = 'recent';
+        return response()->json(self::pagination($need), 200);
+    }
+    public function drafts() {
+        $need = 'drafts';
+        return response()->json(self::pagination($need), 200);
+    }
+
+    public static function pagination($need) {
+
+        $subjects = Teacher::find(Helper::auth(self::need())->id)->subjects();
+
+        if($need == 'all')
+        {
+            return $subjects->paginate(6);
+        }
+        else if($need == 'pending')
+        {
+            return $subjects->where('status', 0)->paginate(3);
+        }
+        else if($need == 'recent')
+        {
+            return $subjects->where('status', 1)
+                    ->orderBy('created_at', 'DESC')
+                    ->paginate(6);
+        }
+        else
+        {
+            return $subjects->where('status', 2)->paginate(6);
+        }
     }
 
     /**
@@ -43,9 +79,9 @@ class SubjectController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(SubjectStoreRequest $request)
-    {   
+    {
         $teacher = Teacher::find(Helper::auth(self::need())->id);
-        
+
         $subject = new Subject();
         $subject->subject_uid = Helper::getUuid();
         $subject->title = $request->title;
@@ -54,10 +90,10 @@ class SubjectController extends Controller
         $subject->duration = $request->duration;
         $subject->duration_type = $request->duration_type;
         $subject->price = $request->price;
-        
+
         $teacher->subjects()->save($subject);
 
-        return response()->json('Subject Save',200);
+        return response()->json($teacher->subjects,200);
     }
 
     /**

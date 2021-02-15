@@ -27,6 +27,11 @@ Route::group(['prefix' => 'teacher', 'middleware' => ['auth:teacher']], function
 
     Route::resource('account', 'Api\Teacher\AccountController');
     Route::resource('subject', 'Api\Teacher\SubjectController');
+
+    Route::get('/pending/subjects', 'Api\Teacher\SubjectController@pending');
+    Route::get('/recent/subjects', 'Api\Teacher\SubjectController@recent');
+    Route::get('/drafts/subjects', 'Api\Teacher\SubjectController@drafts');
+
 });
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {

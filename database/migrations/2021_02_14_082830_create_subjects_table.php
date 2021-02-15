@@ -23,6 +23,7 @@ class CreateSubjectsTable extends Migration
             $table->string('duration');
             $table->string('duration_type');
             $table->bigInteger('price');
+            $table->integer('status')->default(0);
             $table->timestamps();
         });
     }
